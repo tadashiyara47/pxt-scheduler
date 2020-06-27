@@ -148,6 +148,25 @@ namespace scheduler {
     }
 
     /**
+     * Run some code every n seconds, starting after o seconds
+     * @param n number of seconds, eg: 5
+     */
+    //% blockId=do_every block="do every %n seconds, starting in %o seconds" blockGap=8
+    //% n.min=1
+    export function do_every_offset(n: number, o: number, f: () => void) {
+        let micros = n * 1000000
+        let offset = o * 1000000
+        let event = {
+            cb: f,
+            when: clock + offset,
+            repeating: true,
+            interval: micros
+        }
+        schedule(event)
+    }
+
+    
+    /**
      * Run the timing event loop
      */
     //% blockId=event_loop block="run 'once' and 'every' events"
