@@ -4,7 +4,7 @@
  */
 
 //% weight=100 color=#8a8bd1 icon="⧖"
-namespace scheduling {
+namespace scheduler {
 
     type Event = {
         cb: () => void,
