@@ -176,7 +176,7 @@ namespace scheduler {
         schedule(event)
     }
 
-    
+
     /**
      * Run the timing event loop
      */
