@@ -153,7 +153,7 @@ namespace scheduler {
     //% blockId=event_loop block="run 'once' and 'every' events"
     export function event_loop() {
         debuglog(`event loop wake, clock is ${clock}, ${queue.nodes.length} events in PQ`)
-        let next = queue.peekMin()
+        let next = queue.removeMin()
         if (!next) {
             debuglog("no events, waiting 1")
             control.waitMicros(1)
@@ -165,19 +165,16 @@ namespace scheduler {
             debuglog(`waiting ${wait} for next event`)
             control.waitMicros(wait)
         }
-        else {
-            let next = queue.removeMin()
-            debuglog(`firing event at ${next.when}`)
-            if (next.repeating) {
-                debuglog(`scheduling repeat at interval ${next.interval}`)
-                schedule({
-                    cb: next.cb,
-                    when: clock + next.interval,
-                    repeating: true,
-                    interval: next.interval
-                })
-            }
-            next.cb()
+        debuglog(`firing event at ${next.when}`)
+        if (next.repeating) {
+            debuglog(`scheduling repeat at interval ${next.interval}`)
+            schedule({
+                cb: next.cb,
+                when: clock + next.interval,
+                repeating: true,
+                interval: next.interval
+            })
         }
+        next.cb()
     }
 }
