@@ -7,39 +7,46 @@
 namespace scheduler {
 
     type Event = {
-        cb: () => void,
+        cb: (seconds: number) => void,
         repeating: boolean,
         interval: number,
         when: number
     };
 
-    type PQNode<T> = {
-        priority: number,
-        data: T
-    }
-
-    class PQ<T> {
-        nodes: Array<PQNode<T>>
+    class PQ {
+        nodes: Array<Event>
 
         constructor() {
             this.nodes = []
         }
 
-        insert(priority: number, data: T) {
-            this.nodes.push({ priority: priority, data: data })
+        lt(event1: Event, event2: Event): boolean {
+            if (event1.when == event2.when) {
+                if (event1.repeating != event2.repeating) {
+                    return event2.repeating
+                } else {
+                    return event1.interval < event2.interval
+                }
+            } else {
+                return event1.when < event2.when
+            }
+        }
+
+        insert(event: Event) {
+            this.nodes.push(event)
             this.upHeap(this.nodes.length - 1)
         }
 
-        peekMin(): T {
+        peekMin(): Event {
             if (this.nodes.length > 0) {
-                return this.nodes[0].data
+                return this.nodes[0]
             }
             return null
         }
 
-        removeMin(): T {
+        removeMin(): Event {
             if (this.nodes.length > 0) {
-                let data = this.nodes[0].data
+                let data = this.nodes[0]
                 this.nodes[0] = this.nodes[this.nodes.length - 1]
                 this.nodes.pop()
                 this.downHeap(0)
@@ -65,7 +72,7 @@ namespace scheduler {
             if (index > 0) {
                 let parentIndex = this.parent(index)
                 let parent = this.nodes[parentIndex]
-                if (parent.priority > node.priority) {
+                if (this.lt(node, parent)) {
                     this.nodes[parentIndex] = node
                     this.nodes[index] = parent
                     this.upHeap(parentIndex)
@@ -81,14 +88,14 @@ namespace scheduler {
                 if (this.rightChild(index) < this.nodes.length) {
                     let rightIndex = this.rightChild(index)
                     let right = this.nodes[rightIndex]
-                    if (right.priority < node.priority && right.priority < left.priority) {
+                    if (this.lt(right, node) && this.lt(right, left)) {
                         this.nodes[rightIndex] = node
                         this.nodes[index] = right
                         this.downHeap(rightIndex)
                         return
                     }
                 }
-                if (left.priority < node.priority) {
+                if (this.lt(left, node)) {
                     this.nodes[leftIndex] = node
                     this.nodes[index] = left
                     this.downHeap(leftIndex)
@@ -99,12 +106,12 @@ namespace scheduler {
 
     }
 
-    let queue = new PQ<Event>()
+    let queue = new PQ()
     let clock = 0
-    let debug = false
+    export let debug = false
 
     function schedule(event: Event) {
-        queue.insert(event.when, event)
+        queue.insert(event)
     }
 
     function debuglog(s: string) {
@@ -114,35 +121,39 @@ namespace scheduler {
     }
 
     /**
-     * Run some code after n seconds
+     * Run code every n-second "tick"
+     * @param n number of seconds, eg: 1
+     */
+    //% blockId=tick_every block="%n second tick" blockGap=8
+    //% n.min=1
+    export function tick_every(n: number, f: (seconds: number) => void) {
+        do_every_offset(n * 2, 0, f)
+
+    }
+
+    /**
+     * Run code every n-second "tock"
+     * @param n number of seconds, eg: 1
+     */
+    //% blockId=tock_every_ block="%n second tock" blockGap=8
+    //% n.min=1
+    export function tock_every(n: number, f: (seconds: number) => void) {
+        do_every_offset(n * 2, n, f)
+    }
+
+    /**
+     * Run code after n seconds
      * @param n number of seconds, eg: 5
      */
     //% blockId=do_once block="do once after %n seconds" blockGap=8
     //% n.min=1
-    export function do_once(n: number, f: () => void) {
+    export function do_once(n: number, f: (seconds: number) => void) {
         let micros = n * 1000000
         let event = {
             cb: f,
-            when: clock + micros + 1, // make sure "once" events always happen after "every" events
+            when: clock + micros, // make sure "once" events always happen after "every" events
             repeating: false,
             interval: 0
-        }
-        schedule(event)
-    }
-
-    /**
-     * Run some code every n seconds
-     * @param n number of seconds, eg: 5
-     */
-    //% blockId=do_every block="do every %n seconds" blockGap=8
-    //% n.min=1
-    export function do_every(n: number, f: () => void) {
-        let micros = n * 1000000
-        let event = {
-            cb: f,
-            when: clock + micros,
-            repeating: true,
-            interval: micros
         }
         schedule(event)
     }
@@ -153,7 +164,7 @@ namespace scheduler {
      */
     //% blockId=do_every_offset block="do every %n seconds, starting in %o seconds" blockGap=8
     //% n.min=1
-    export function do_every_offset(n: number, o: number, f: () => void) {
+    export function do_every_offset(n: number, o: number, f: (seconds: number) => void) {
         let micros = n * 1000000
         let offset = o * 1000000
         let event = {
@@ -169,13 +180,14 @@ namespace scheduler {
     /**
      * Run the timing event loop
      */
-    //% blockId=event_loop block="run 'once' and 'every' events"
+    //% blockId=event_loop block="run scheduler events"
     export function event_loop() {
         debuglog(`event loop wake, clock is ${clock}, ${queue.nodes.length} events in PQ`)
         let next = queue.removeMin()
         if (!next) {
             debuglog("no events, waiting 1")
             control.waitMicros(1)
+            return
         }
         else if (next.when > clock) {
             debuglog(`going to wait for event at ${next.when}`)
@@ -194,6 +206,6 @@ namespace scheduler {
                 interval: next.interval
             })
         }
-        next.cb()
+        next.cb((clock / 1000000) >> 0)
     }
 }
