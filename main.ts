@@ -151,7 +151,7 @@ namespace scheduler {
      * Run some code every n seconds, starting after o seconds
      * @param n number of seconds, eg: 5
      */
-    //% blockId=do_every block="do every %n seconds, starting in %o seconds" blockGap=8
+    //% blockId=do_every_offset block="do every %n seconds, starting in %o seconds" blockGap=8
     //% n.min=1
     export function do_every_offset(n: number, o: number, f: () => void) {
         let micros = n * 1000000
