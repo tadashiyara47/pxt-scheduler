@@ -3,101 +3,101 @@
  * An event loop with one-time and repeating events
  */
 
-type Event = {
-    cb: () => void,
-    repeating: boolean,
-    interval: number,
-    when: number
-};
-
-type PQNode<T> = {
-    priority: number,
-    data: T
-}
-
-class PQ<T> {
-    nodes: Array<PQNode<T>>
-
-    constructor() {
-        this.nodes = []
-    }
-
-    insert(priority: number, data: T) {
-        this.nodes.push({ priority: priority, data: data })
-        this.upHeap(this.nodes.length - 1)
-    }
-
-    peekMin(): T {
-        if (this.nodes.length > 0) {
-            return this.nodes[0].data
-        }
-        return null
-    }
-
-    removeMin(): T {
-        if (this.nodes.length > 0) {
-            let data = this.nodes[0].data
-            this.nodes[0] = this.nodes[this.nodes.length - 1]
-            this.nodes.pop()
-            this.downHeap(0)
-            return data
-        }
-        return null
-    }
-
-    parent(index: number): number {
-        return ((index - 1) / 2) >> 0
-    }
-
-    leftChild(index: number): number {
-        return index * 2 + 1
-    }
-
-    rightChild(index: number): number {
-        return index * 2 + 2
-    }
-
-    upHeap(index: number) {
-        let node = this.nodes[index]
-        if (index > 0) {
-            let parentIndex = this.parent(index)
-            let parent = this.nodes[parentIndex]
-            if (parent.priority > node.priority) {
-                this.nodes[parentIndex] = node
-                this.nodes[index] = parent
-                this.upHeap(parentIndex)
-            }
-        }
-    }
-
-    downHeap(index: number) {
-        let node = this.nodes[index]
-        if (this.leftChild(index) < this.nodes.length) {
-            let leftIndex = this.leftChild(index)
-            let left = this.nodes[leftIndex]
-            if (this.rightChild(index) < this.nodes.length) {
-                let rightIndex = this.rightChild(index)
-                let right = this.nodes[rightIndex]
-                if (right.priority < node.priority && right.priority < left.priority) {
-                    this.nodes[rightIndex] = node
-                    this.nodes[index] = right
-                    this.downHeap(rightIndex)
-                    return
-                }
-            }
-            if (left.priority < node.priority) {
-                this.nodes[leftIndex] = node
-                this.nodes[index] = left
-                this.downHeap(leftIndex)
-            }
-        }
-    }
-
-
-}
-
 //% weight=100 color=#8a8bd1 icon="⧖"
 namespace scheduling {
+
+    type Event = {
+        cb: () => void,
+        repeating: boolean,
+        interval: number,
+        when: number
+    };
+
+    type PQNode<T> = {
+        priority: number,
+        data: T
+    }
+
+    class PQ<T> {
+        nodes: Array<PQNode<T>>
+
+        constructor() {
+            this.nodes = []
+        }
+
+        insert(priority: number, data: T) {
+            this.nodes.push({ priority: priority, data: data })
+            this.upHeap(this.nodes.length - 1)
+        }
+
+        peekMin(): T {
+            if (this.nodes.length > 0) {
+                return this.nodes[0].data
+            }
+            return null
+        }
+
+        removeMin(): T {
+            if (this.nodes.length > 0) {
+                let data = this.nodes[0].data
+                this.nodes[0] = this.nodes[this.nodes.length - 1]
+                this.nodes.pop()
+                this.downHeap(0)
+                return data
+            }
+            return null
+        }
+
+        parent(index: number): number {
+            return ((index - 1) / 2) >> 0
+        }
+
+        leftChild(index: number): number {
+            return index * 2 + 1
+        }
+
+        rightChild(index: number): number {
+            return index * 2 + 2
+        }
+
+        upHeap(index: number) {
+            let node = this.nodes[index]
+            if (index > 0) {
+                let parentIndex = this.parent(index)
+                let parent = this.nodes[parentIndex]
+                if (parent.priority > node.priority) {
+                    this.nodes[parentIndex] = node
+                    this.nodes[index] = parent
+                    this.upHeap(parentIndex)
+                }
+            }
+        }
+
+        downHeap(index: number) {
+            let node = this.nodes[index]
+            if (this.leftChild(index) < this.nodes.length) {
+                let leftIndex = this.leftChild(index)
+                let left = this.nodes[leftIndex]
+                if (this.rightChild(index) < this.nodes.length) {
+                    let rightIndex = this.rightChild(index)
+                    let right = this.nodes[rightIndex]
+                    if (right.priority < node.priority && right.priority < left.priority) {
+                        this.nodes[rightIndex] = node
+                        this.nodes[index] = right
+                        this.downHeap(rightIndex)
+                        return
+                    }
+                }
+                if (left.priority < node.priority) {
+                    this.nodes[leftIndex] = node
+                    this.nodes[index] = left
+                    this.downHeap(leftIndex)
+                }
+            }
+        }
+
+
+    }
 
     let queue = new PQ<Event>()
     let clock = 0
