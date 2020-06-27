@@ -1,0 +1,17 @@
+{
+    "name": "pxt-scheduler",
+    "version": "0.0.0",
+    "description": "",
+    "dependencies": {
+        "circuit-playground": "*"
+    },
+    "files": [
+        "README.md",
+        "main.ts"
+    ],
+    "testFiles": [
+        "test.ts"
+    ],
+    "public": false,
+    "additionalFilePaths": []
+}
