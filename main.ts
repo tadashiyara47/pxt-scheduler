@@ -108,7 +108,9 @@ namespace scheduler {
 
     let queue = new PQ()
     let clock = 0
+    let running = false
     export let debug = false
+    
 
     function schedule(event: Event) {
         queue.insert(event)
@@ -135,12 +137,46 @@ namespace scheduler {
      * Run code every n-second "tock"
      * @param n number of seconds, eg: 1
      */
-    //% blockId=tock_every_ block="%n second tock" blockGap=8
+    //% blockId=tock_every block="%n second tock" blockGap=8
     //% n.min=1
     export function tock_every(n: number, f: (seconds: number) => void) {
         do_every_offset(n * 2, n, f)
     }
 
+    /**
+     * Advance a counter on an interval
+     * @param n number of seconds, eg: 1
+     * @param start start value for counter, eg: 1
+     * @param end end value for counter, eg: 10
+     */
+    //% blockId=count_every block="every %n seconds count from %start to %end" blockGap=8
+    export function count_every(n: number, start: number, end: number, f: (count: number) => void) {
+        let counter = start
+        let cb = function(_seconds: number) {
+            if (counter > end) {
+                counter = start
+            }
+            f(counter)
+            counter++
+        }
+        do_every_offset(n, 0, cb)
+    }
+
+    /**
+     * Run the scheduler loop
+     */
+    //% blockId=resume_scheduler block="resume scheduler"
+    export function resume_scheduler() {
+        running = true
+    }
+
+    /**
+     * Run the scheduler loop
+     */
+    //% blockId=pause_scheduler block="pause scheduler"
+    export function pause_scheduler() {
+        running = false
+    }
     /**
      * Run code after n seconds
      * @param n number of seconds, eg: 5
@@ -157,6 +193,7 @@ namespace scheduler {
         }
         schedule(event)
     }
+
 
     /**
      * Run some code every n seconds, starting after o seconds
@@ -183,6 +220,11 @@ namespace scheduler {
     //% blockId=event_loop block="run scheduler events"
     export function event_loop() {
         debuglog(`event loop wake, clock is ${clock}, ${queue.nodes.length} events in PQ`)
+        if (!running) {
+            debuglog("queue not running")
+            control.waitMicros(1)
+            return
+        }
         let next = queue.removeMin()
         if (!next) {
             debuglog("no events, waiting 1")
@@ -195,6 +237,15 @@ namespace scheduler {
             clock = next.when
             debuglog(`waiting ${wait} for next event`)
             control.waitMicros(wait)
+            if (!running) { // we were paused while we were waiting
+                schedule({
+                    cb: next.cb,
+                    when: clock,
+                    repeating: next.repeating,
+                    interval: next.interval
+                })
+                return
+            }
         }
         debuglog(`firing event at ${next.when}`)
         if (next.repeating) {
