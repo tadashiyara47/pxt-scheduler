@@ -110,7 +110,7 @@ namespace scheduler {
     let clock = 0
     let running = false
     export let debug = false
-    
+
 
     function schedule(event: Event) {
         queue.insert(event)
@@ -152,7 +152,7 @@ namespace scheduler {
     //% blockId=count_every block="every %n seconds count from %start to %end" blockGap=8
     export function count_every(n: number, start: number, end: number, f: (count: number) => void) {
         let counter = start
-        let cb = function(_seconds: number) {
+        let cb = function (_seconds: number) {
             if (counter > end) {
                 counter = start
             }
