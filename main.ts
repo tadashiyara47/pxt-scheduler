@@ -127,7 +127,8 @@ namespace scheduler {
      * @param n number of seconds, eg: 1
      */
     //% blockId=tick_every block="%n second tick" blockGap=8
-    //% n.min=1
+    //% blockAllowMultiple=1
+    //% draggableParameters
     export function tick_every(n: number, f: (seconds: number) => void) {
         do_every_offset(n * 2, 0, f)
 
@@ -138,7 +139,8 @@ namespace scheduler {
      * @param n number of seconds, eg: 1
      */
     //% blockId=tock_every block="%n second tock" blockGap=8
-    //% n.min=1
+    //% blockAllowMultiple=1
+    //% draggableParameters
     export function tock_every(n: number, f: (seconds: number) => void) {
         do_every_offset(n * 2, n, f)
     }
@@ -150,6 +152,8 @@ namespace scheduler {
      * @param end end value for counter, eg: 10
      */
     //% blockId=count_every block="every %n seconds count from %start to %end" blockGap=8
+    //% blockAllowMultiple=1
+    //% draggableParameters
     export function count_every(n: number, start: number, end: number, f: (count: number) => void) {
         let counter = start
         let cb = function (_seconds: number) {
@@ -182,7 +186,8 @@ namespace scheduler {
      * @param n number of seconds, eg: 5
      */
     //% blockId=do_once block="do once after %n seconds" blockGap=8
-    //% n.min=1
+    //% blockAllowMultiple=1    
+    //% draggableParameters
     export function do_once(n: number, f: (seconds: number) => void) {
         let micros = n * 1000000
         let event = {
@@ -200,7 +205,8 @@ namespace scheduler {
      * @param n number of seconds, eg: 5
      */
     //% blockId=do_every_offset block="do every %n seconds, starting in %o seconds" blockGap=8
-    //% n.min=1
+    //% blockAllowMultiple=1
+    //% draggableParameters
     export function do_every_offset(n: number, o: number, f: (seconds: number) => void) {
         let micros = n * 1000000
         let offset = o * 1000000
