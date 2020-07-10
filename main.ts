@@ -167,6 +167,36 @@ namespace scheduler {
     }
 
     /**
+     * Advance a counter on an interval
+     * @param n number of seconds, eg: 1
+     * @param start1 start value for outer counter, eg: 1
+     * @param end1 end value for outer counter, eg: 10
+     * @param start2 start value for inner counter, eg: 1
+     * @param end2 end value for inner counter, eg: 10
+     */
+    //% blockId=count_every2 block="every %n seconds count from %start1 to %end1 and %start2 to %end2" blockGap=8
+    //% blockAllowMultiple=1
+    //% draggableParameters
+    export function count_every2(n: number, start1: number, end1: number,
+      start2: number, end2: number,
+        f: (count1: number, count2: number) => void) {
+        let counter1 = start1
+        let counter2 = start2
+        let cb = function (_seconds: number) {
+            if (counter2 > end2) {
+                counter2 = start2
+                counter1++
+            }
+            if (counter1 > end1) {
+                counter1 = start1
+            }
+            f(counter1, counter2)
+            counter2++
+        }
+        do_every_offset(n, 0, cb)
+    }
+
+    /**
      * Run the scheduler loop
      */
     //% blockId=resume_scheduler block="resume scheduler"
