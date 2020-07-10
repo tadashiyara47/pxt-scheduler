@@ -252,9 +252,10 @@ namespace scheduler {
 
     /**
      * Run the timing event loop
+     * @param tick milliseconds per tick, eg: 1000
      */
-    //% blockId=event_loop block="run scheduler events"
-    export function event_loop() {
+    //% blockId=event_loop block="run scheduler events with tick every %tick milliseconds"
+    export function event_loop(tick: number) {
         debuglog(`event loop wake, clock is ${clock}, ${queue.nodes.length} events in PQ`)
         if (!running) {
             debuglog("queue not running")
@@ -269,7 +270,12 @@ namespace scheduler {
         }
         else if (next.when > clock) {
             debuglog(`going to wait for event at ${next.when}`)
-            let wait = next.when - clock
+            // this is a bit of a hack. 
+            // we're going to wait a number of "virtual microseconds" 
+            // depending on the tick value. 
+            // the default value of 1000 (i.e., a second is 1000 milliseconds) 
+            // will lead to real microseconds being equivalent to virtual microseconds.
+            let wait = (next.when - clock) * (tick / 1000)
             clock = next.when
             debuglog(`waiting ${wait} for next event`)
             control.waitMicros(wait)
