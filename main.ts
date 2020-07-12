@@ -127,7 +127,8 @@ namespace scheduler {
      * @param n number of seconds, eg: 1
      */
     //% blockId=tick_every block="%n second tick" blockGap=8
-    //% n.min=1
+    //% blockAllowMultiple=1
+    //% draggableParameters
     export function tick_every(n: number, f: (seconds: number) => void) {
         do_every_offset(n * 2, 0, f)
 
@@ -138,7 +139,8 @@ namespace scheduler {
      * @param n number of seconds, eg: 1
      */
     //% blockId=tock_every block="%n second tock" blockGap=8
-    //% n.min=1
+    //% blockAllowMultiple=1
+    //% draggableParameters
     export function tock_every(n: number, f: (seconds: number) => void) {
         do_every_offset(n * 2, n, f)
     }
@@ -150,6 +152,8 @@ namespace scheduler {
      * @param end end value for counter, eg: 10
      */
     //% blockId=count_every block="every %n seconds count from %start to %end" blockGap=8
+    //% blockAllowMultiple=1
+    //% draggableParameters
     export function count_every(n: number, start: number, end: number, f: (count: number) => void) {
         let counter = start
         let cb = function (_seconds: number) {
@@ -158,6 +162,36 @@ namespace scheduler {
             }
             f(counter)
             counter++
+        }
+        do_every_offset(n, 0, cb)
+    }
+
+    /**
+     * Advance a counter on an interval
+     * @param n number of seconds, eg: 1
+     * @param start1 start value for outer counter, eg: 1
+     * @param end1 end value for outer counter, eg: 10
+     * @param start2 start value for inner counter, eg: 1
+     * @param end2 end value for inner counter, eg: 10
+     */
+    //% blockId=count_every2 block="every %n seconds count from %start1 to %end1 and %start2 to %end2" blockGap=8
+    //% blockAllowMultiple=1
+    //% draggableParameters
+    export function count_every2(n: number, start1: number, end1: number,
+      start2: number, end2: number,
+        f: (count1: number, count2: number) => void) {
+        let counter1 = start1
+        let counter2 = start2
+        let cb = function (_seconds: number) {
+            if (counter2 > end2) {
+                counter2 = start2
+                counter1++
+            }
+            if (counter1 > end1) {
+                counter1 = start1
+            }
+            f(counter1, counter2)
+            counter2++
         }
         do_every_offset(n, 0, cb)
     }
@@ -182,7 +216,8 @@ namespace scheduler {
      * @param n number of seconds, eg: 5
      */
     //% blockId=do_once block="do once after %n seconds" blockGap=8
-    //% n.min=1
+    //% blockAllowMultiple=1    
+    //% draggableParameters
     export function do_once(n: number, f: (seconds: number) => void) {
         let micros = n * 1000000
         let event = {
@@ -200,7 +235,8 @@ namespace scheduler {
      * @param n number of seconds, eg: 5
      */
     //% blockId=do_every_offset block="do every %n seconds, starting in %o seconds" blockGap=8
-    //% n.min=1
+    //% blockAllowMultiple=1
+    //% draggableParameters
     export function do_every_offset(n: number, o: number, f: (seconds: number) => void) {
         let micros = n * 1000000
         let offset = o * 1000000
@@ -216,9 +252,10 @@ namespace scheduler {
 
     /**
      * Run the timing event loop
+     * @param tick milliseconds per tick, eg: 1000
      */
-    //% blockId=event_loop block="run scheduler events"
-    export function event_loop() {
+    //% blockId=event_loop block="run scheduler events with tick every %tick milliseconds"
+    export function event_loop(tick: number) {
         debuglog(`event loop wake, clock is ${clock}, ${queue.nodes.length} events in PQ`)
         if (!running) {
             debuglog("queue not running")
@@ -233,7 +270,12 @@ namespace scheduler {
         }
         else if (next.when > clock) {
             debuglog(`going to wait for event at ${next.when}`)
-            let wait = next.when - clock
+            // this is a bit of a hack. 
+            // we're going to wait a number of "virtual microseconds" 
+            // depending on the tick value. 
+            // the default value of 1000 (i.e., a second is 1000 milliseconds) 
+            // will lead to real microseconds being equivalent to virtual microseconds.
+            let wait = (next.when - clock) * (tick / 1000)
             clock = next.when
             debuglog(`waiting ${wait} for next event`)
             control.waitMicros(wait)

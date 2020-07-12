@@ -1,6 +1,6 @@
 {
     "name": "pxt-scheduler",
-    "version": "0.0.7",
+    "version": "0.0.9",
     "description": "",
     "dependencies": {
         "circuit-playground": "*"
@@ -14,5 +14,6 @@
     ],
     "public": false,
     "preferredEditor": "tsprj",
+
     "installedVersion": "workspace:997e7d4e-9210-4334-a82d-ba5948279800"
 }
